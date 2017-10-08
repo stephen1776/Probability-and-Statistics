@@ -1,0 +1,126 @@
+---
+title: "Wheat Harvested Surface in Spain 2004"
+author: "Stephen Blatti"
+date: "October 7, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+6. The wheat table shown on p26 gives the wheat harvested surfaces in 2004 by autonomous communities in Spain measured in hectares. 
+```{r}
+library(PASWR2)
+```
+a) Create the var's community and wheat.surface from the Wheat Table. store both var's in a data.frame named wheat.spain.
+```{r}
+community <- c("Galicia", "Asturias", "Cantabria", "Pais Vasco", "Navarra", "La Rioja", "Aragon", "Cataluna", "Islas Baleares", "Castilla y Leon", "Madrid", "Castilla-La Mancha", "C. Valenciana", "Region de Murcia", "Extremadura", "Andalucia", "Islas Canarias")
+wheat.surface <- c(18817, 65, 440, 25143, 66326, 34214, 311479, 74206, 7203, 619858, 13118, 263424, 6111, 9500, 143250, 558292, 100)
+wheat.spain <- data.frame(community, wheat.surface)
+head(wheat.spain)
+```
+b) Find the maximum, the minimum, and the range for the variable wheat.surface.
+```{r}
+max(wheat.spain$wheat.surface)
+min(wheat.spain$wheat.surface)
+diff(range(wheat.spain$wheat.surface))
+```
+c) Which community has the largest harvested wheat surface?
+```{r}
+wheat.spain[wheat.spain$wheat.surface == max(wheat.spain$wheat.surface),]
+```
+d) Sort the autonomous communities in ascending order.
+```{r}
+asc_order <- wheat.spain[order(wheat.spain$wheat.surface, decreasing = FALSE), ]
+head(asc_order)
+```
+e) Sort the autonomous communities in decending order.
+```{r}
+dec_order <- wheat.spain[order(wheat.spain$wheat.surface, decreasing = TRUE), ]
+head(dec_order)
+```
+f) Create a new file called wheat.c where Asturias has been removed.
+```{r}
+wheat.c <- wheat.spain[wheat.spain$community != "Asturias", ]
+head(wheat.c)
+```
+g) Add Asturias back to the file wheat.c
+```{r}
+wheat.c <- rbind(wheat.c, wheat.spain[wheat.spain$community == "Asturias", ])
+wheat.c
+```
+h) Create in wheat.c a new variable called acre indicating the harvested surface in acres (1 acre = 0.40468564224 hectares).
+```{r}
+wheat.c <- within(data = wheat.c, { 
+  acre <- wheat.surface/0.40468564224
+  })
+head(wheat.c)
+```
+i) What is the total harvested surface in hectares and in acres in Spain in 2004?
+```{r}
+sum(wheat.c$wheat.surface)
+sum(wheat.c$acre)
+```
+j) Define in wheat.c the row.names() using the names of the communities. Remove the community variable from wheat.c
+```{r}
+#rm(community, wheat.surface)
+no_community <- wheat.c[, -1]
+row.names(no_community) <- wheat.c[, 1]
+wheat.c <- no_community
+head(wheat.c)
+```
+k) What percent of the commumities have a harvested wheat surface greater than the mean wheat surface area? 
+```{r}
+PCA <- mean(wheat.c$wheat.surface > mean(wheat.c$wheat.surface))*100
+PCA
+```
+l) Sort wheat.c by autonomous communities' name (row.names()).
+```{r}
+sorted_AO <- wheat.c[order(row.names(wheat.c)), ]
+head(sorted_AO)
+```
+m) Determine the communities with less than 40,000 acres of harvested surface and find thier total harvested surface in hectares and acres.
+```{r}
+less_than_40k <- wheat.c[wheat.c$acre < 40000, ]
+less_than_40k
+apply(less_than_40k, 2, sum)
+```
+n) Create a new file called wheat.sum where the autonomous communities that have less than 40,000 acres of harvested surface are consolidated into a single category named "less than 40,000" with the results from (m).
+```{r}
+lt_40 <- apply(less_than_40k, 2, sum)
+gt_40 <- wheat.c[wheat.c$acre >= 40000, ]
+wheat.sum <- rbind(gt_40, lt_40)
+row.names(wheat.sum)[11] <- c("less than 40,000")
+wheat.sum
+```
+o) Use the function dump() on wheat.c storing the results in a new file named wheat.txt. Remove wheat.c from your path and check that you can recover it from wheat.txt.
+```{r}
+dump("wheat.c", file = "wheat.txt")
+rm("wheat.c")
+source("wheat.txt")
+head(wheat.c)
+
+```
+p) Create a text file called wheat.dat from the wheat.sum file using the command write.table(). Explain the differences between wheat.txt and wheat.dat.
+```{r}
+write.table(x = wheat.sum, file = "wheat.dat")
+# The values from wheat.txt are collapsed down in wheat.dat
+```
+q) Use the comand read.table() to read the file wheat.dat
+```{r}
+head(read.table(file = "wheat.dat"))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,13 @@
+wheat.c <-
+structure(list(wheat.surface = c(18817, 440, 25143, 66326, 34214, 
+311479, 74206, 7203, 619858, 13118, 263424, 6111, 9500, 143250, 
+558292, 100, 65), acre = c(46497.8196306765, 1087.26367845553, 
+62129.7060622894, 163895.115311912, 84544.6352151759, 769681.371140112, 
+183367.019371525, 17799.0006270799, 1531702.47545474, 32415.2839408628, 
+650934.880076066, 15100.6098614585, 23475.0112393807, 353978.458951714, 
+1379569.57630067, 247.105381467165, 160.618497953657)), .Names = c("wheat.surface", 
+"acre"), class = "data.frame", row.names = c("Galicia", "Cantabria", 
+"Pais Vasco", "Navarra", "La Rioja", "Aragon", "Cataluna", "Islas Baleares", 
+"Castilla y Leon", "Madrid", "Castilla-La Mancha", "C. Valenciana", 
+"Region de Murcia", "Extremadura", "Andalucia", "Islas Canarias", 
+"Asturias"))
