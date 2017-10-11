@@ -1,0 +1,104 @@
+---
+title: "Problem 2.3"
+author: "Stephen Blatti"
+date: "October 9, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+2.3 Load the data frame WheatSpain from the PASWR package.
+```{r}
+library(PASWR2)
+```
+a) Find quantiles, deciles, mean, maximum, minimum, interquartile range, variance, and standard deviation of the variable hectares. Comment on the results. What was Spain's 2004 total harvested wheat area in hectares?
+```{r}
+quantile(WHEATSPAIN$hectares)
+quantile(WHEATSPAIN$hectares, probs = seq(from = 0.1, to = 1.0, by = 0.1))
+mean(WHEATSPAIN$hectares)
+median(WHEATSPAIN$hectares)
+IQR(WHEATSPAIN$hectares)
+var(WHEATSPAIN$hectares)
+sd(WHEATSPAIN$hectares)
+sum(WHEATSPAIN$hectares)
+```
+
+      Spain's 2004 distribution of harvested wheat is skewed to the right - see that the mean 126561.5 the median is only 25143. The difference between Q1 and Q2 is also much smaller than the difference between Q3 and Q2. The total harvested area is 2151546 hectares.
+
+b) Create a function that calculates the quantiles, mean, variance, standard deviation, total, and the range of any variable.
+```{r}
+calculate_stats <- function(x, ...){ 
+  Q <- quantile(x)
+  M <- mean(x)
+  V <- var(x)
+  SD <- sd(x)
+  S <- sum(x)
+  R <- diff(range(x))
+  print(c(Quantiles = Q, Mean = M, Var = V, SD = SD, Total = S, Range = R))
+  }
+calculate_stats(WHEATSPAIN$hectares)
+```
+c) Which communities are below the 10th percentile in hectares? Which communities are above the 90th percentile? In which percentile is Navarra?
+```{r}
+# bottom 10% of communities
+below10 <- quantile(WHEATSPAIN$hectares, probs = 0.10)
+WHEATSPAIN[WHEATSPAIN$hectares < below10, ] 
+
+# top 10% of communities
+above90 <- quantile(WHEATSPAIN$hectares, probs = 0.90)
+WHEATSPAIN[WHEATSPAIN$hectares > above90, ] 
+
+# Navarra
+WHEATSPAIN[order(WHEATSPAIN$hectares), ]
+nav_num <- which(WHEATSPAIN[order(WHEATSPAIN$hectares), ]$community=="Navarra")
+p_nav <- (nav_num - 1) / (length(WHEATSPAIN[order(WHEATSPAIN$hectares), ]$community) - 1)
+p_nav
+quantile(WHEATSPAIN$hectares, probs = p_nav)
+```
+d) Create and display in the same graphics device a frequency histogram of the variable acres and a density histogram of the variable acres. Superimpose a density curve over the 2nd histogram.
+```{r}
+plot1 <- ggplot(data = WHEATSPAIN, aes(x = acres)) + geom_histogram() + theme_bw()
+plot2 <- ggplot(data = WHEATSPAIN, aes(x = acres, y = ..density..)) + geom_histogram() + theme_bw() + geom_density()
+multiplot(plot1, plot2)
+```
+e) Explain why using breaks of 0; 100,000; 250,000; 360,000; and 1,550,000 automatically result in a density histogram.
+```{r}
+# The breaks used are not equidistant, the default of his() is to then produce a density
+#histogram.
+```
+f) Create and display in the same graphics device a barplot of acres and a density histogram of acres using break points of 0; 100,000; 250,000; 360,000; and 1,550,000.
+```{r}
+bins <- c(0, 100000, 250000, 360000, 1550000)
+WHEATSPAIN$cuts <- cut(WHEATSPAIN$acres, breaks = bins)
+plot1 <- ggplot(data = WHEATSPAIN, aes(x = cuts)) + geom_bar(fill = "lightblue") + theme_bw() + labs(title = "Barplot")
+plot2 <- ggplot(data = WHEATSPAIN, aes(x = acres, y = ..density..)) + geom_histogram(breaks = bins, fill = "lightblue") + theme_bw() + geom_density()
+multiplot(plot1, plot2, layout = matrix(c(1, 2), byrow = TRUE, ncol = 1))
+```
+g) Add vertical lines to the density histogram of acres to indicate the locations of the mean and the median.
+```{r}
+plot2 <- ggplot(data = WHEATSPAIN, aes(x = acres, y = ..density..)) + geom_histogram(breaks = bins, fill = "lightblue") + theme_bw() + geom_density()
+plot2 + geom_vline(xintercept = c(median(WHEATSPAIN$acres),+ mean(WHEATSPAIN$acres))) + annotate("text", label = "Median", x = median(WHEATSPAIN$acres),y = 6e-06) + annotate("text", label = "Mean", x = mean(WHEATSPAIN$acres), y = 6e-06)
+```
+h) Create a boxplot of hectares and label the communites that appear as outliers in the boxplot. (Hint: Use identity().)
+```{r}
+with(data = WHEATSPAIN, boxplot(hectares))
+with(data = WHEATSPAIN, identify(rep(1, length(hectares)), hectares, labels = community))
+```
+i) Determine the community with the largest harvested wheat surface area using either acres or hectares. Remove the community from the data frame and compute the mean, median, and standard deviation of hectares. How do these values compare to the values for these statistics computed in part (a)? 
+```{r}
+remove_CastillaLeon <- WHEATSPAIN[-10, ]
+mean(WHEATSPAIN$hectares)
+mean(remove_CastillaLeon$hectares)
+median(WHEATSPAIN$hectares)
+median(remove_CastillaLeon$hectares)
+sd(WHEATSPAIN$hectares)
+sd(remove_CastillaLeon$hectares)
+```
+The mean, median, and standard deviation are all smaller than those from part (a) where Castilla-Leon was included.
+
+
+
+
+

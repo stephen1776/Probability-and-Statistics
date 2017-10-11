@@ -1,0 +1,59 @@
+---
+title: "Problem 2.5"
+author: "Stephen Blatti"
+date: "October 11, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+2.5 The data frame vit2005 in the PASWR package contains descriptive info and the appraised total price (in euros) for appartments in Victoria, Spain.
+```{r}
+library(PASWR2)
+```
+a) Create a freq table, piechart, and a barplot showing the num of apartments grouped by the var out. Which method conveys the info best?
+```{r}
+VIT2005$out <- factor(VIT2005$out, levels = c("E25", "E50", "E75", "E100"))
+plot1 <- ggplot(data = VIT2005, aes(x = factor(1), fill = out))+ geom_bar(width = 1) + coord_polar(theta = "y") + theme_bw() + labs(x = "", y = "")
+plot2 <- ggplot(data = VIT2005, aes(x = out)) + geom_bar(fill = "lightblue") + theme_bw()
+plot1
+plot2
+# The barplot is best
+```
+b) Charaterize the distribution of the var totalprice. 
+```{r}
+ggplot(data = VIT2005, aes(x = totalprice)) + geom_histogram(fill = "lightblue") + theme_bw()
+max(VIT2005$totalprice) #one outlier at 560000.
+median(VIT2005$totalprice)
+IQR(VIT2005$totalprice)
+# The distribution of totalprice is skewed to the right. The median totalprice is 269750 and the IQR for totalprice is 100125.
+```
+c) Charaterize the relationship between totalprice and area.
+```{r}
+ggplot(data = VIT2005, aes(x = area, y = totalprice)) + geom_point() + theme_bw()
+# The relationship between totalprice and area is of positive linear.
+```
+d) Create a Trellis plot of totalprice vs area conditioning on toilets. Between what 2 values of area do apartments have both one and two bathrooms?
+```{r}
+xyplot(totalprice ~ area | toilets, data = VIT2005, layout = c(1, 2), as.table = TRUE)
+ggplot(data = VIT2005, aes(x = area, y = totalprice, color = as.factor(toilets))) + geom_point() + facet_grid(toilets ~ .) + theme_bw() +  guides(color = guide_legend("Number of\nToilets"))
+# Apartments with one bathroom: approx between 50 and 100 m^2
+# Apartments with two bathrooms: approx between 80 and 120 m2. 
+# The intersection of apartments with one and two bathrooms is approximately (80 to 100)m^2.
+```
+e) Use the area values from part (d) to create a subset of apartments that have both 1 and 2 bathrooms. By how much does an additional bathroom increase the appraised value of the apartment?  Would you be willing to pay for an additioal bathroom if you lived in Spain?
+```{r}
+both_bathrooms <- subset(VIT2005, subset = area >= 80 & area <= 100)
+result <- tapply(both_bathrooms$totalprice, both_bathrooms$toilets, median)
+result
+diff(result)
+# The increase in totalprice for a second bathroom for apartments between
+# 80 and 100 m^2 is 36000 euros - probably not willing to pay the addiional costs.
+```
+
+
+
+
+
+
