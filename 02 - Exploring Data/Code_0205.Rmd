@@ -2,7 +2,7 @@
 title: "Problem 2.5"
 author: "Stephen Blatti"
 date: "October 11, 2017"
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
