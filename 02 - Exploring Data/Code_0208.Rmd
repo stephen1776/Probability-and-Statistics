@@ -1,0 +1,90 @@
+---
+title: "Problem 2.8"
+author: "Stephen Blatti"
+date: "October 15, 2017"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+2.8 Use the Cars2004EU data frame from the PASWR package which contains the numbers of cars per 1000 inhabitants (cars), the total number of known mortal accidents (deaths) and the country population/1000 (population) for the 25 member countries of the European Union for the year 2004.
+```{r}
+library(PASWR2)
+```
+(a)	Compute the total number of cars per 1000 inhabitants in each country, and store the result in an object named total.cars. Determine the total number of known automobile fatalities in 2004 divided by the total number of cars for each country and store the result in an object named death.rate.
+```{r}
+CARS2004 <- within(data = CARS2004, expr = { 
+  total.cars = cars * population / 1000
+  death.rate = deaths / total.cars
+  })
+head(CARS2004)
+```
+(b)	Create a barplot showing the automobile death rate for each of the European Union member countries. Make the bars increase in magnitude so that the countries with the smallest automobile death rates appear first.
+```{r}
+ggplot(data =CARS2004, aes(x = reorder(country, death.rate), y = death.rate)) +
+  geom_bar(stat = "identity", fill = "red") +
+  coord_flip() + labs(x = "", y = "Death Rate",
+                      title = "European 2004 Automobile Death Rate") + theme_bw()
+```
+(c)	Which country has the lowest automobile death rate? Which country has the highest automobile death rate?
+```{r}
+# Germany - lowest
+# Cyprus - highest
+```
+(d)	Create a scatterplot of population versus total.cars. How would you characterize the relationship?
+```{r}
+ggplot(data = CARS2004, aes(x = total.cars, y = population)) + geom_point() +
+  geom_smooth() + theme_bw()
+# Positive curvilinear relationship between total.cars and population.
+```
+(e)	Find the least squares estimates for regressing population on total.cars. Superimpose the least squares line on the scatterplot from (d). What population does the least squares model predict for a country with a total.cars value of 19224.630? Find the difference between the population predicted from the least squares model and the actual population for the country with a total.cars value of 19224.630.
+```{r}
+fit <- lm(population ~ total.cars, data = CARS2004)
+summary(fit)
+ggplot(data = CARS2004, aes(x = total.cars, y = population)) + geom_point() +
+  geom_smooth(method = "lm") + theme_bw()
+population <- predict(fit, newdata = data.frame(total.cars = 19224.630)) * 1000
+population
+residuals(fit)[7]*1000 # Spain is num 7
+# The difference between Spain’s actual population and the value predicted with least squares (the seventh residual) 42,345,000 - 38,285,550 = 4,059,450.
+CARS2004$population[CARS2004$country=="Spain"] * 1000 - population
+```
+(f)	create a scatterplot of total.cars versus death.rate. How would you characterize the relationship between the two variables?
+```{r}
+ggplot(data = CARS2004, aes(x = death.rate, y = total.cars)) + geom_point() +
+  theme_bw()
+# Decreasing monotonic relationship between total.cars and death.rate.
+```
+(g)	Compute Spearman's rank correlation of total.cars and death.rate. What is this coefficient measuring?
+```{r}
+with(data = CARS2004, cor(total.cars, death.rate, method = "spearman"))
+# Spearman’s rank correlation coefficient measures the monotonic relationship between two variables.
+```
+(h) Plot the logarithm of total.cars vs the logarithm of death.rate. How would you characterize the relatinship.
+```{r}
+ggplot(data = CARS2004, aes(x = log(death.rate), y = log(total.cars))) + geom_point() +
+  theme_bw()
+# The relationship is strong, linear, and negative between the logarithm of total.cars
+# and the logarithm of death.rate.
+```
+(i) What are the least squares estimates for the regression of log(death.rate) on log(total.cars). Superimpose the least squares line on the scatterplot from (h). 
+```{r}
+log.fit <- lm(log(total.cars) ~ log(death.rate), data = CARS2004)
+coef(summary(log.fit))
+ggplot(data = CARS2004, aes(x = log(death.rate), y = log(total.cars))) + geom_point() +
+  theme_bw() + geom_smooth(method = "lm")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
