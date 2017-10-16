@@ -1,0 +1,165 @@
+---
+title: "Problem 2.6"
+author: "Stephen Blatti"
+date: "October 12, 2017"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+2.6 Access the data from the url http://www.stat.berkeley.edu/users/statlabs/data/babies.data
+and store the info in an object named BABIES using the fctn read.table(). A description of the var's can be found at http://www.stat.berkeley.edu/users/statlabs/labs.html
+
+These data are a subset from a much larger sstudy dealing with child health and developement.
+```{r}
+data_url <- "http://www.stat.berkeley.edu/users/statlabs/data/babies.data"
+BABIES <- read.table(file = url(data_url), header = TRUE)
+head(BABIES)
+```
+a) Create a "clean" data set that removes subjests if any observations on the subject are unknown. Note that bwt, gestation, parity, height, weight and smoke use values of 999, 999, 9, 99, 999, and 9 to denote unknown. Store the modified data set in an object named CLEAN.
+```{r}
+CLEAN <- with(data = BABIES, BABIES[bwt != 999 & gestation != 999 & parity != 9 & age != 99 & height != 99 & weight != 999 & smoke != 9, ])
+```
+b) Use the info in CLEAN to create a density histogram of the birth weights of babies whose mothers have never smoked (smoke = 0) and another histogram placed directly below the first in the same graphics device for the birth weights of babies whose mothers currently smoke (smoke=1). Make the range of the x-axis 30 to 180 (ounces) for both histograms. Superimpose a density curve over each histogram.
+```{r}
+library(ggplot2)
+CLEAN$smoke <- factor(CLEAN$smoke, levels = 0:1, labels =c("Non-Smoker", "Smoker"))
+ggplot(data = CLEAN, aes(x = bwt, y = ..density..)) + geom_histogram(fill = "lightblue") + geom_density(color = "blue") + facet_grid(smoke ~.) + xlim(30, 180) + theme_bw()
+
+```
+c) Based on the histograms in (b), characterize the distribution of baby birth weight for both non-smoking and smoking mothers.
+```{r}
+# Based on the density histograms in (b), the distributions of birth weights for
+# both smoking and non-smoking mothers are unimodal and symmetric.
+
+```
+d) What is the mean weight difference between babies of smokers and non-smokers? Can you think of any reasons not to use the mean as a measure of center to compare birth weights in this problem?
+```{r}
+(result <- tapply(CLEAN$bwt, CLEAN$smoke, mean))
+(DIFF <- result[1] - result[2])
+```
+e) Create side—by-side boxplots to compare the birth weights of babies whose mother's smoked and those who currently smoke. Use traditional graphics (boxplot()) as well as Trellis/lattice graphs to create the boxplots (bwplot()).
+```{r}
+library(lattice)
+boxplot(bwt ~ smoke, data = CLEAN)
+bwplot(bwt ~ smoke, data = CLEAN)
+ggplot(data = CLEAN, aes(x = smoke, y = bwt)) + geom_boxplot() + theme_bw()
+```
+f) What is the median weight difference between babies who are firstborn and who are not?
+```{r}
+(result <- tapply(CLEAN$bwt, CLEAN$parity, median))
+(dif <- result[1] - result[2])
+```
+g)	Create a single graph of the densities for pre-pregnancy weight for mothers who have never smoked and for mothers who currently smoke. Make sure both densities appear on the same graphics device and place a color coded legend in the top right corner of the graph.
+```{r}
+ggplot(data = CLEAN, aes(x = weight, color = smoke)) + geom_density() + theme_bw()
+```
+h)	Characterize the pre-pregnancy distribution of weight for mothers who have never smoked and for mothers who currently smoke.
+```{r}
+median(CLEAN$weight[CLEAN$smoke == "Smoker"])
+IQR(CLEAN$weight[CLEAN$smoke == "Smoker"])
+median(CLEAN$weight[CLEAN$smoke == "Non-Smoker"])
+IQR(CLEAN$weight[CLEAN$smoke == "Non-Smoker"])
+# The distribution of pre-pregnancy weight for mothers who are non-smokers and mothers who currently smoke is unimodal and skewed to the right.
+```
+i)	What is the mean pre-pregnancy weight difference between mothers who do not smoke and those who do? Can you think of any reasons not to use the mean as a measure of center to compare pre-pregnancy weights in this problem?
+```{r}
+(result <- tapply(CLEAN$weight, CLEAN$smoke, mean))
+(dif <- result[1] - result[2])
+```
+j)	Compute the body weight index (BMI) for each mother in CLEAN. Recall that BMI is defined as kg/m2 (0.0254 m = 1 in., and 0.45359 kg = 1 lb.). Add the variables weight in kg, height in m, and BMI to CLEAN and store the result in CLEANP.
+```{r}
+CLEANP <- within(data = CLEAN, expr = { 
+  weight_SU = 0.45359 * weight 
+  height_SU = 0.0254 * height
+  BMI = weight_SU / height_SU^2
+})
+head(CLEANP)
+```
+k)	Characterize the distribution of BMI.
+```{r}
+median(CLEANP$BMI)
+IQR(CLEANP$BMI)
+ggplot(data = CLEANP, aes(x = BMI)) + geom_density() + theme_bw()
+# The distribution of BMI is unimodal skewed to the right
+```
+l)	Group pregnant mothers according to their BWI quartile. Find the mean and standard deviation for baby birth weights in each quartile for mothers who have never smoked and those who currently smoke. Find the median and IQR for baby birth weights in each quartile for mothers who have never smoked and those who currently smoke. Based on your answers, would you characterize birth weight in  each group as relatively symmetric or skewed? Create histograms and densities of bwt conditioned on BWI quartiles and whether the mother smokes to verify your previous assertions about the shape.
+```{r}
+values <- quantile(CLEANP$BMI)
+CLEANP <- within(data = CLEANP, expr = {
+  Quartiles <- cut(BMI, values, include.lowest = TRUE)
+})
+tapply(CLEANP$bwt, list(CLEANP$Quartiles, CLEANP$smoke), mean)
+tapply(CLEANP$bwt, list(CLEANP$Quartiles, CLEANP$smoke), sd)
+tapply(CLEANP$bwt, list(CLEANP$Quartiles, CLEANP$smoke), median)
+tapply(CLEANP$bwt, list(CLEANP$Quartiles, CLEANP$smoke), IQR)
+ggplot(data = CLEANP, aes(x = bwt)) + geom_histogram(fill="lightblue") + theme_bw() + facet_grid(smoke ~ Quartiles)
+ggplot(data = CLEANP, aes(x = bwt)) + geom_density() + theme_bw() + facet_grid(smoke ~ Quartiles)
+
+# Birth weight in each quartile appears to be symmetric regardless of the mother’s smoking status.
+```
+m) Create side-by-side boxplots of bwt based on whether the mother smokes conditioned on BWI quartiles. Does this graph verify your findings in (I)?
+```{r}
+ggplot(data = CLEANP, aes(x = smoke, y = bwt)) + geom_boxplot() + facet_grid(Quartiles~.) + theme_bw()
+# The boxplots also suggest the distribution of bwt is symmetric for both smokers
+# and non-smokers in each quartile.
+```
+n) Does it appear that BWI is related to the birth weight of a baby? Create a scatterplot Of birth weight (bwt) versus BMI while conditioning on BWI quartiles and whether the mother smokes to help answer the question.
+```{r}
+ggplot(data = CLEANP, aes(x = BMI, y = bwt)) + geom_point() + facet_grid(smoke ~ Quartiles) + theme_bw()
+# There appears to be no association between birth weight and BMI.
+```
+o) Replace baby birth weight (bwt) with gestation length (gestation) and answer questions (l), (m), and (n).
+```{r}
+tapply(CLEANP$gestation, list(CLEANP$Quartiles, CLEANP$smoke), mean)
+tapply(CLEANP$gestation, list(CLEANP$Quartiles, CLEANP$smoke), sd)
+tapply(CLEANP$gestation, list(CLEANP$Quartiles, CLEANP$smoke), median)
+tapply(CLEANP$gestation, list(CLEANP$Quartiles, CLEANP$smoke), IQR)
+
+ggplot(data = CLEANP, aes(x = gestation)) + geom_histogram(fill = "lightblue") +theme_bw() + facet_grid(smoke ~ Quartiles)
+ggplot(data = CLEANP, aes(x = bwt)) + geom_density() + theme_bw() + facet_grid(smoke ~ Quartiles)
+ggplot(data = CLEANP, aes(x = smoke, y = gestation)) + geom_boxplot() + facet_grid(Quartiles~.) + theme_bw()
+# Gestation in each quartile appears to be symmetric regardless of the mother’s smoking status.
+# The histograms, density and box plots confirm this
+ggplot(data = CLEANP, aes(x = BMI, y = gestation)) + geom_point() + facet_grid(smoke ~ Quartiles) 
+  #+ theme_bw()
+# There doesn't appear to be any association between gestation and BMI
+```
+p) Create a scatterplot of bwt versus gestation conditioned on BWI quartiles and Whether the mother smokes. Fit straight lines to the data using lm(), lqs(), and r1m(); and display the lines in the scatterplots. What do you find interesting about the resulting graphs?
+```{r}
+library(MASS)
+fit_lqs <- lqs(bwt ~ gestation, data = CLEANP)
+x_vals <- seq(min(CLEANP$gestation), max(CLEANP$gestation),length.out = 100)
+df <- data.frame(gestation = x_vals)
+df$bwt <- predict(fit_lqs, newdata = df)
+ggplot(data = CLEANP, aes(x = gestation, y = bwt)) + geom_point(alpha = 0.5, color ="lightblue") +
+  facet_grid(smoke ~ Quartiles) +
+  theme_bw() +
+  stat_smooth(method = "lm", se = FALSE) +
+  stat_smooth(method = "rlm", se = FALSE, color = "blue") +
+  geom_line(data = df, color = "green")
+```
+q) Create a table of smoke by parity. Display the numerical results in a graph. What percent of mothers did not	smoke during the pregnancy of their first child?
+```{r}
+CLEANP$parity <- factor(CLEAN$parity, levels = 0:1, labels =c("First-Born", "Not First-Born"))
+table1 <- xtabs(~smoke + parity, data = CLEANP)
+prop.table(table1, 2)
+ggplot(data = CLEANP, aes(x = parity, fill = smoke)) + geom_bar() + theme_bw()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
